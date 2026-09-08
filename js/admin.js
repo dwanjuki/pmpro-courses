@@ -551,6 +551,13 @@ function pmpro_courses_prep_click_events() {
 jQuery(document).ready(function () {
 	pmpro_courses_setup();
 	pmpro_courses_prep_click_events();
+
+	// Classic Editor: clear the change flag when the post form is submitted,
+	// otherwise our onbeforeunload handler prompts the user and leaves the
+	// Update button disabled with the spinner running.
+	jQuery(document).on('submit', 'form#post', function () {
+		pmpro_courses_clear_change_flag();
+	});
 });
 
 jQuery(function () {
@@ -562,8 +569,14 @@ jQuery(function () {
 	let wasSaving = false;
 
 	wp.data.subscribe(function () {
-		const isSaving = select('core/editor').isSavingPost();
-		const isAutosaving = select('core/editor').isAutosavingPost();
+		// The core/editor store only exists in the Block Editor.
+		const editor = select('core/editor');
+		if (!editor) {
+			return;
+		}
+
+		const isSaving = editor.isSavingPost();
+		const isAutosaving = editor.isAutosavingPost();
 
 		// Detect transition: was saving -> done saving (and not an autosave)
 		if (wasSaving && !isSaving && !isAutosaving) {
